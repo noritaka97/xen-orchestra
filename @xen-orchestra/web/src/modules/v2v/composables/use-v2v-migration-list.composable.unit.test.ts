@@ -71,10 +71,6 @@ function itStoresNoVmWithoutList(write: ListWrite) {
   itStoresNothingWithoutSourceOrPool(write)
 }
 
-beforeEach(() => {
-  localStorage.clear()
-})
-
 describe('list', () => {
   it('is the list stored for the source and the pool', () => {
     seedV2vMigrationList(STORED_LIST)
