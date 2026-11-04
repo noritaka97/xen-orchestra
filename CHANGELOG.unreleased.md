@@ -19,6 +19,7 @@
 - [VMs/Hosts] Show a loader in VM and host icons while their power state is changing, with the operation in progress in the tooltip, and move the header loader next to the name (PR [#10720](https://github.com/vatesfr/xen-orchestra/pull/10720))
 - [REST API/VIFs] VIFs can be restricted to a list of VLANs (VLAN filtering, XCP-ng 8.3) (PR [#10742](https://github.com/vatesfr/xen-orchestra/pull/10742))
 - [VM/Network] Changing the MAC address of a VIF keeps the VLANs it is restricted to, and moving it to a network with a VLAN is refused until they are removed (PR [#10742](https://github.com/vatesfr/xen-orchestra/pull/10742))
+- [Backup/Restore] Incremental restores and replications keep the VLANs a VIF is restricted to, and warn in the log when the target cannot (PR [#10742](https://github.com/vatesfr/xen-orchestra/pull/10742))
 
 ### Bug fixes
 
