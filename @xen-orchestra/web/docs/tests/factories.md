@@ -32,7 +32,7 @@ Domain objects are created through factories in `src/test/`, one per object type
 | `createV2vMigrationList`, `createV2vDestinationDefaults`, `createV2vMigrationListVms`              | `V2vMigrationList`, its defaults and `count` VMs                                                                                                          |
 | `createV2vVmRow`, `createV2vVmRowsInput`                                                           | `V2vVmRow` of an inventory VM of its own id, built by `buildV2vVmRows`, then overrides / the empty `V2vVmRowsInput`                                       |
 | `createTableSelectionBindings`                                                                     | `SelectionBindings` of a table with nothing selected, for a table component given its selection as props                                                  |
-| `createV2vSelectedVm`, `createV2vListLock`                                                         | `V2vSelectedVm` (literal labels) / `V2vListLock` (locked), the props of the selected VMs panel components                                                 |
+| `createV2vSelectedVm`, `createV2vListPair`                                                         | `V2vSelectedVm` (literal labels) / `V2vListPair` (source host and pool name), the props of the selected VMs panel components                              |
 
 `createPoolStats` composes `createHostStats`, since pool stats are one entry per host: pass a `Partial<XapiHostStats>` per host id, or an `{ error }` entry for a host whose stats the pool could not fetch.
 
