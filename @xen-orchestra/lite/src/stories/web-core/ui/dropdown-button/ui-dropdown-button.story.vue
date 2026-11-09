@@ -2,6 +2,8 @@
   <ComponentStory
     v-slot="{ properties, settings }"
     :params="[
+      prop('variant').type('DropdownButtonVariant').enum('primary', 'secondary').preset('primary').required().widget(),
+      prop('size').type('DropdownButtonSize').enum('small', 'medium').preset('medium').required().widget(),
       iconProp(),
       prop('selected').bool().widget(),
       prop('disabled').bool().widget().ctx(),

@@ -1,11 +1,11 @@
-<!-- v5 -->
+<!-- v9 -->
 <template>
-  <button :class="{ selected }" :disabled="isDisabled" class="ui-dropdown-item" type="button">
-    <VtsIcon :name="icon" size="medium" />
-    <span class="typo-action-button label">
+  <button :class="className" :disabled="isDisabled" class="ui-dropdown-button" type="button">
+    <VtsIcon :name="icon" size="current" />
+    <span class="label">
       <slot />
     </span>
-    <VtsIcon name="fa:angle-down" size="medium" />
+    <VtsIcon name="fa:angle-down" size="current" />
   </button>
 </template>
 
@@ -13,46 +13,43 @@
 import VtsIcon from '@core/components/icon/VtsIcon.vue'
 import { useDisabled } from '@core/composables/disabled.composable.ts'
 import type { IconName } from '@core/icons'
+import { toVariants } from '@core/utils/to-variants.util.ts'
+import { computed } from 'vue'
 
-const { disabled, selected, icon } = defineProps<{
+export type DropdownButtonVariant = 'primary' | 'secondary'
+export type DropdownButtonSize = 'small' | 'medium'
+
+const { variant, size, disabled, selected, icon } = defineProps<{
+  variant: DropdownButtonVariant
+  size: DropdownButtonSize
   disabled?: boolean
   selected?: boolean
   icon?: IconName
 }>()
 
+defineSlots<{
+  default(): any
+}>()
+
 const isDisabled = useDisabled(() => disabled)
+
+const fontClasses = {
+  small: 'typo-action-button-small',
+  medium: 'typo-action-button',
+}
+
+const className = computed(() => [fontClasses[size], toVariants({ variant, size, selected })])
 </script>
 
 <style lang="postcss" scoped>
-.ui-dropdown-item {
+.ui-dropdown-button {
   display: inline-flex;
   align-items: center;
-  padding-block: 1.2rem;
-  padding-inline: 1.6rem;
   gap: 0.8rem;
-  background: var(--color-neutral-background-primary);
-  border: 0.1rem solid var(--color-brand-txt-base);
-  border-radius: 9rem;
-  cursor: pointer;
   position: relative;
+  cursor: pointer;
+  border: 0.1rem solid transparent;
   color: var(--color-brand-txt-base);
-
-  &:hover {
-    border-color: var(--color-brand-txt-hover);
-    background-color: var(--color-brand-background-hover);
-    color: var(--color-brand-txt-hover);
-  }
-
-  &:active {
-    border-color: var(--color-brand-txt-active);
-    background-color: var(--color-brand-background-active);
-    color: var(--color-brand-txt-active);
-  }
-
-  &.selected:not(:disabled) {
-    background-color: var(--color-brand-background-selected);
-    outline: 0.1rem solid var(--color-brand-txt-base);
-  }
 
   &:focus-visible {
     outline: none;
@@ -60,7 +57,6 @@ const isDisabled = useDisabled(() => disabled)
     &::before {
       content: '';
       position: absolute;
-      inset: -0.5rem;
       border: 0.2rem solid var(--color-brand-txt-base);
       border-radius: 0.4rem;
     }
@@ -68,9 +64,80 @@ const isDisabled = useDisabled(() => disabled)
 
   &:disabled {
     cursor: not-allowed;
-    border-color: var(--color-neutral-txt-secondary);
-    background-color: var(--color-neutral-background-disabled);
-    color: var(--color-neutral-txt-secondary);
+  }
+
+  /* SIZE */
+
+  &.size--small {
+    padding: 0.8rem 1.2rem;
+  }
+
+  &.size--medium {
+    padding: 1.2rem 1.6rem;
+  }
+
+  /* VARIANT */
+
+  &.variant--primary {
+    border-color: var(--color-brand-item-base);
+    border-radius: 9rem;
+    background-color: var(--color-neutral-background-primary);
+
+    &:hover {
+      border-color: var(--color-brand-item-hover);
+      color: var(--color-brand-txt-hover);
+    }
+
+    &:active {
+      border-color: var(--color-brand-item-active);
+      color: var(--color-brand-txt-active);
+    }
+
+    &.selected {
+      border-color: var(--color-brand-item-base);
+      box-shadow: inset 0 0 0 0.1rem var(--color-brand-item-base);
+      color: var(--color-brand-txt-base);
+    }
+
+    &:focus-visible::before {
+      inset: -0.6rem;
+    }
+
+    &:disabled {
+      border-color: var(--color-neutral-txt-secondary);
+      box-shadow: none;
+      background-color: var(--color-neutral-background-disabled);
+      color: var(--color-neutral-txt-secondary);
+    }
+  }
+
+  &.variant--secondary {
+    border-radius: 0.4rem;
+    background-color: transparent;
+
+    &:hover {
+      background-color: var(--color-brand-background-hover);
+      color: var(--color-brand-txt-hover);
+    }
+
+    &:active {
+      background-color: var(--color-brand-background-active);
+      color: var(--color-brand-txt-active);
+    }
+
+    &.selected {
+      background-color: var(--color-brand-background-selected);
+      color: var(--color-brand-txt-base);
+    }
+
+    &:focus-visible::before {
+      inset: -0.5rem;
+    }
+
+    &:disabled {
+      background-color: transparent;
+      color: var(--color-neutral-txt-secondary);
+    }
   }
 }
 </style>

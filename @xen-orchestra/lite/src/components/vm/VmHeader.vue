@@ -13,7 +13,9 @@
     <template #actions>
       <MenuList v-if="vm !== undefined" placement="bottom-start">
         <template #trigger="{ open }">
-          <UiDropdownButton @click="open($event)">{{ t('action:change-state') }}</UiDropdownButton>
+          <UiDropdownButton variant="secondary" size="medium" icon="action:change-state" @click="open($event)">
+            {{ t('action:change-state') }}
+          </UiDropdownButton>
         </template>
         <VmActionPowerStateItems :vm-refs="[vm.$ref]" />
       </MenuList>

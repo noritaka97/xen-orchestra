@@ -1,7 +1,9 @@
 <template>
   <MenuList placement="bottom-end">
     <template #trigger="{ open }">
-      <UiDropdownButton @click="open($event)">{{ t('third-parties') }}</UiDropdownButton>
+      <UiDropdownButton variant="primary" size="medium" @click="open($event)">
+        {{ t('third-parties') }}
+      </UiDropdownButton>
     </template>
     <ThirdPartiesMenuItems />
   </MenuList>
