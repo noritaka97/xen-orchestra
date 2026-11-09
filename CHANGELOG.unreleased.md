@@ -21,6 +21,7 @@
 - [Pool/Network] Add network dedicated page, with General and PIFs tabs (PR [#10704](https://github.com/vatesfr/xen-orchestra/pull/10704))
 - [Pool/Traffic rules] Display traffic rules by priority within their network (PR [#10688](https://github.com/vatesfr/xen-orchestra/pull/10688))
 - [VMs/Hosts] Show a loader in VM and host icons while their power state is changing, with the operation in progress in the tooltip, and move the header loader next to the name (PR [#10720](https://github.com/vatesfr/xen-orchestra/pull/10720))
+- [REST API] Create, update and delete backup jobs and schedules (admin only): `POST /rest/v0/backup-jobs`, `PATCH|DELETE /rest/v0/backup-jobs/:id`, `POST /rest/v0/schedules`, `PATCH|DELETE /rest/v0/schedules/:id` (PR [#10595](https://github.com/vatesfr/xen-orchestra/pull/10595))
 
 ### Bug fixes
 
@@ -29,6 +30,7 @@
 - [Side panels] Fix the side panel showing up for a moment when switching tabs (PR [#10745](https://github.com/vatesfr/xen-orchestra/pull/10745))
 - [Menus] Fix menus being shifted from their button and submenus opening on top of their parent menu (PR [#10745](https://github.com/vatesfr/xen-orchestra/pull/10745))
 - [Pools] Pool side panel now shows the same pool name, UUID and icon as the pools table, and keeps the pool card when the pool is disconnected or unreachable (PR [#10714](https://github.com/vatesfr/xen-orchestra/pull/10714))
+- [Treeview] Fix translations of the tooltip for VM and host statuses in treeview (PR [#10643](https://github.com/vatesfr/xen-orchestra/pull/10643))
 
 ### Packages to release
 
@@ -49,7 +51,7 @@
 - @vates/types minor
 - @xen-orchestra/backups minor
 - @xen-orchestra/qa-test patch
-- @xen-orchestra/rest-api patch
+- @xen-orchestra/rest-api minor
 - @xen-orchestra/web minor
 - @xen-orchestra/web-core minor
 - xo-server minor
