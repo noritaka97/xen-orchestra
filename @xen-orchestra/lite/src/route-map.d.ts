@@ -296,6 +296,13 @@ declare module 'vue-router/auto-routes' {
       Record<never, never>,
       | never
     >,
+    '/story/web-core/action-button/vts-action-button': RouteRecordInfo<
+      '/story/web-core/action-button/vts-action-button',
+      '/story/web-core/action-button/vts-action-button',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
     '/story/web-core/banner/vts-banner': RouteRecordInfo<
       '/story/web-core/banner/vts-banner',
       '/story/web-core/banner/vts-banner',
@@ -425,6 +432,20 @@ declare module 'vue-router/auto-routes' {
     '/story/web-core/menu/vts-action-items': RouteRecordInfo<
       '/story/web-core/menu/vts-action-items',
       '/story/web-core/menu/vts-action-items',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/story/web-core/menu/vts-mobile-menu': RouteRecordInfo<
+      '/story/web-core/menu/vts-mobile-menu',
+      '/story/web-core/menu/vts-mobile-menu',
+      Record<never, never>,
+      Record<never, never>,
+      | never
+    >,
+    '/story/web-core/menu/vts-responsive-menu': RouteRecordInfo<
+      '/story/web-core/menu/vts-responsive-menu',
+      '/story/web-core/menu/vts-responsive-menu',
       Record<never, never>,
       Record<never, never>,
       | never
@@ -1374,6 +1395,12 @@ declare module 'vue-router/auto-routes' {
       views:
         | never
     }
+    'src/stories/web-core/action-button/vts-action-button.story.vue': {
+      routes:
+        | '/story/web-core/action-button/vts-action-button'
+      views:
+        | never
+    }
     'src/stories/web-core/banner/vts-banner.story.vue': {
       routes:
         | '/story/web-core/banner/vts-banner'
@@ -1485,6 +1512,18 @@ declare module 'vue-router/auto-routes' {
     'src/stories/web-core/menu/vts-action-items.story.vue': {
       routes:
         | '/story/web-core/menu/vts-action-items'
+      views:
+        | never
+    }
+    'src/stories/web-core/menu/vts-mobile-menu.story.vue': {
+      routes:
+        | '/story/web-core/menu/vts-mobile-menu'
+      views:
+        | never
+    }
+    'src/stories/web-core/menu/vts-responsive-menu.story.vue': {
+      routes:
+        | '/story/web-core/menu/vts-responsive-menu'
       views:
         | never
     }
