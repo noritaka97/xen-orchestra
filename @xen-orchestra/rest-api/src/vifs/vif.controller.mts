@@ -56,6 +56,7 @@ import { XapiXoController } from '../abstract-classes/xapi-xo-controller.mjs'
 import { partialVifs, vif, vifId, vifIds } from '../open-api/oa-examples/vif.oa-example.mjs'
 import { genericAlarmsExample } from '../open-api/oa-examples/alarm.oa-example.mjs'
 import { AlarmService } from '../alarms/alarm.service.mjs'
+import { VifService } from './vif.service.mjs'
 import { messageIds, partialMessages } from '../open-api/oa-examples/message.oa-example.mjs'
 import { taskIds, partialTasks, taskLocation } from '../open-api/oa-examples/task.oa-example.mjs'
 import type { CreateActionReturnType } from '../abstract-classes/base-controller.mjs'
@@ -73,7 +74,10 @@ type CreateVifBody = Omit<CreateVifParams[0], 'network' | 'VM' | 'other_config' 
 type UpdateVifRequestBody = Omit<EditVifProps, 'ipv4Allowed' | 'ipv6Allowed'> & {
   allowedIpv4Addresses?: EditVifProps['ipv4Allowed']
   allowedIpv6Addresses?: EditVifProps['ipv6Allowed']
+  networkId?: string
 }
+
+const MAC_ADDRESS_REGEX = /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i
 
 const UPDATE_VIF_ACTIONS = Object.keys(SUPPORTED_ACTIONS_BY_RESOURCE.vif.update).map(
   k => `update:${k}` as SupportedActions<'vif'>
@@ -87,9 +91,24 @@ const UPDATE_VIF_ACTIONS = Object.keys(SUPPORTED_ACTIONS_BY_RESOURCE.vif.update)
 @provide(VifController)
 export class VifController extends XapiXoController<XoVif> {
   #alarmService: AlarmService
-  constructor(@inject(RestApi) restApi: RestApi, @inject(AlarmService) alarmService: AlarmService) {
+  #vifService: VifService
+  constructor(
+    @inject(RestApi) restApi: RestApi,
+    @inject(AlarmService) alarmService: AlarmService,
+    @inject(VifService) vifService: VifService
+  ) {
     super('VIF', restApi)
     this.#alarmService = alarmService
+    this.#vifService = vifService
+  }
+
+  #getNetworkInPool(networkId: string, poolId: XoVif['$pool']): XoNetwork {
+    const network = this.restApi.getObject<XoNetwork>(networkId as XoNetwork['id'], 'network')
+
+    if (network.$pool !== poolId) {
+      throw invalidParameters(`the network ${networkId} does not belong to the pool ${poolId}`)
+    }
+    return network
   }
 
   /**
@@ -139,12 +158,13 @@ export class VifController extends XapiXoController<XoVif> {
    * Partial update of a VIF: only the fields present in the body are modified.
    * Setting the allowed IPs to a non-empty list switches the locking mode to `locked`.
    * `rateLimit` is expressed in kB/s (kilobytes per second).
+   * Changing `networkId` moves the VIF to another network of the same pool, without changing its ID.
    *
    * Required privilege per field provided in the body:
    * - resource: vif, action: update:&lt;field&gt;
    *
    * @example id "f028c5d4-578a-332c-394e-087aaca32dd3"
-   * @example body { "lockingMode": "locked", "allowedIpv4Addresses": ["192.168.0.42"], "rateLimit": 1000 }
+   * @example body { "lockingMode": "locked", "allowedIpv4Addresses": ["192.168.0.42"], "networkId": "6b6ca0f5-6611-0636-4b0a-1fb1c1e96414", "rateLimit": 1000 }
    */
   @Extension('x-mcp-exposure', 'confirm')
   @Patch('{id}')
@@ -163,12 +183,17 @@ export class VifController extends XapiXoController<XoVif> {
   @Response(internalServerErrorResp.status, internalServerErrorResp.description)
   async updateVif(@Path() id: string, @Body() body: UpdateVifRequestBody): Promise<void> {
     const vifId = id as XoVif['id']
-    const { allowedIpv4Addresses, allowedIpv6Addresses, lockingMode, rateLimit, txChecksumming } = body
+    const { allowedIpv4Addresses, allowedIpv6Addresses, lockingMode, networkId, rateLimit, txChecksumming } = body
 
     // resolve first so a missing VIF 404s before any side effect
     const vif = this.getObject(vifId)
     if (Object.keys(body).length === 0) {
       return
+    }
+
+    if (networkId !== undefined && networkId !== vif.$network) {
+      const network = this.#getNetworkInPool(networkId, vif.$pool)
+      await this.getXapi(vifId).callAsync('VIF.move', vif._xapiRef, network._xapiRef)
     }
 
     // keep XO's IP-pool accounting in sync when the allowed IPs change
@@ -329,11 +354,7 @@ export class VifController extends XapiXoController<XoVif> {
     const { MAC, vmId, networkId, ...rest } = body
 
     const vm = this.restApi.getObject<XoVm>(vmId as XoVm['id'], 'VM')
-    const network = this.restApi.getObject<XoNetwork>(networkId as XoNetwork['id'], 'network')
-
-    if (vm.$pool !== network.$pool) {
-      throw invalidParameters(`the VM ${vmId} and network ${networkId} do not belong to the same pool`)
-    }
+    const network = this.#getNetworkInPool(networkId, vm.$pool)
 
     const xapi = this.getXapi(vmId as XoVm['id'])
     const vifRef = await xapi.VIF_create(
@@ -439,5 +460,58 @@ export class VifController extends XapiXoController<XoVif> {
         objectId: vifId,
       },
     })
+  }
+
+  /**
+   * Change the MAC address of a VIF.
+   * XAPI cannot modify a MAC address: the VIF is destroyed and recreated with the same settings,
+   * which briefly cuts the VM connection on this interface.
+   *
+   * Required privilege:
+   * - resource: vif, action: change-mac
+   *
+   * Note: The recreated VIF has a new ID. The new ID is returned in the response.
+   * If the change fails, the VIF is restored with its original MAC address, under a new ID.
+   *
+   * @example id "f07ab729-c0e8-721c-45ec-f11276377030"
+   * @example body { "MAC": "aa:bb:cc:dd:ee:ff" }
+   */
+  @Example(taskLocation)
+  @Example(vifId)
+  @Extension('x-mcp-exposure', 'confirm')
+  @Post('{id}/actions/change_mac')
+  @Middlewares([json(), acl({ resource: 'vif', action: 'change-mac', objectId: 'params.id' })])
+  @SuccessResponse(asynchronousActionResp.status, asynchronousActionResp.description)
+  @Response(200, 'Ok')
+  @Response(forbiddenOperationResp.status, forbiddenOperationResp.description)
+  @Response(notFoundResp.status, notFoundResp.description)
+  @Response(invalidParametersResp.status, invalidParametersResp.description)
+  @Response(internalServerErrorResp.status, internalServerErrorResp.description)
+  async changeVifMac(
+    @Path() id: string,
+    @Body() body: { MAC: string },
+    @Query() sync?: boolean
+  ): CreateActionReturnType<{ id: Unbrand<XoVif>['id'] }> {
+    const vifId = id as XoVif['id']
+    const { MAC } = body
+
+    // validate before any side effect: once deleted, an invalid MAC would make the VIF unrecoverable
+    if (!MAC_ADDRESS_REGEX.test(MAC)) {
+      throw invalidParameters(`invalid MAC address: ${MAC}`)
+    }
+    // resolve first so a missing VIF 404s before the task is created
+    this.getObject(vifId)
+
+    return this.createAction(
+      async () => ({ id: (await this.#vifService.changeMac(vifId, MAC)) as Unbrand<XoVif>['id'] }),
+      {
+        sync,
+        taskProperties: {
+          name: 'change VIF MAC',
+          objectId: vifId,
+          params: { MAC },
+        },
+      }
+    )
   }
 }
